@@ -76,18 +76,6 @@ variable "pass_request_headers" {
   default     = true
 }
 
-variable "create_workload_identity" {
-  description = "Whether to create a standalone AgentCore workload identity alongside the gateway."
-  type        = bool
-  default     = true
-}
-
-variable "workload_identity_oauth2_return_urls" {
-  description = "Allowed OAuth2 return URLs for the standalone workload identity."
-  type        = list(string)
-  default     = []
-}
-
 variable "lambda_runtime" {
   description = "Python runtime for the interceptor Lambda."
   type        = string

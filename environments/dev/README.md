@@ -1,9 +1,8 @@
 # dev environment
 
 Deploys the [`agentcore-gateway`](../../modules/agentcore-gateway) module into a
-development account: an Amazon Bedrock AgentCore Gateway, an AgentCore workload
-identity, and a Python echo interceptor Lambda (deployed via
-`terraform-aws-modules/lambda/aws`).
+development account: an Amazon Bedrock AgentCore Gateway and a Python echo
+interceptor Lambda (deployed via `terraform-aws-modules/lambda/aws`).
 
 ## Usage
 

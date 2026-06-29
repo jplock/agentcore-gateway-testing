@@ -13,16 +13,6 @@ output "gateway_url" {
   value       = module.agentcore_gateway.gateway_url
 }
 
-output "workload_identity_arn" {
-  description = "Standalone AgentCore workload identity ARN."
-  value       = module.agentcore_gateway.workload_identity_arn
-}
-
-output "gateway_workload_identity_arn" {
-  description = "Workload identity ARN managed by the gateway itself."
-  value       = module.agentcore_gateway.gateway_workload_identity_arn
-}
-
 output "interceptor_lambda_arn" {
   description = "Echo interceptor Lambda ARN."
   value       = module.agentcore_gateway.interceptor_lambda_arn

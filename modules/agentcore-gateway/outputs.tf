@@ -18,16 +18,6 @@ output "gateway_role_arn" {
   value       = aws_iam_role.gateway.arn
 }
 
-output "gateway_workload_identity_arn" {
-  description = "ARN of the workload identity automatically created and managed by the gateway."
-  value       = try(aws_bedrockagentcore_gateway.this.workload_identity_details[0].workload_identity_arn, null)
-}
-
-output "workload_identity_arn" {
-  description = "ARN of the standalone AgentCore workload identity (null when create_workload_identity is false)."
-  value       = try(aws_bedrockagentcore_workload_identity.this[0].workload_identity_arn, null)
-}
-
 output "interceptor_lambda_arn" {
   description = "ARN of the echo interceptor Lambda function."
   value       = module.interceptor_lambda.lambda_function_arn

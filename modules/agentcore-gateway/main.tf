@@ -1,15 +1,4 @@
 ############################################
-# AgentCore Identity (standalone workload identity)
-############################################
-
-resource "aws_bedrockagentcore_workload_identity" "this" {
-  count = var.create_workload_identity ? 1 : 0
-
-  name                                = "${replace(var.name, "-", "_")}_identity"
-  allowed_resource_oauth2_return_urls = var.workload_identity_oauth2_return_urls
-}
-
-############################################
 # AgentCore Gateway
 ############################################
 

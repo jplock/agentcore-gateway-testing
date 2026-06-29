@@ -11,9 +11,6 @@ module "agentcore_gateway" {
   interception_points  = ["REQUEST", "RESPONSE"]
   pass_request_headers = true
 
-  # Create a standalone workload identity for the environment.
-  create_workload_identity = true
-
   lambda_log_level = "DEBUG"
 
   tags = var.tags
