@@ -13,12 +13,12 @@ data "aws_iam_policy_document" "gateway_assume_role" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
-      values   = [local.account_id]
+      values   = [local.aws_account_id]
     }
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = ["arn:${local.partition}:bedrock-agentcore:${local.region}:${local.account_id}:gateway/*"]
+      values   = ["arn:${local.aws_partition}:bedrock-agentcore:${local.aws_region}:${local.aws_account_id}:gateway/*"]
     }
   }
 }

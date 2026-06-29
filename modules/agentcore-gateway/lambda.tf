@@ -26,7 +26,7 @@ module "interceptor_lambda" {
   allowed_triggers = {
     AgentCoreGateway = {
       principal  = "bedrock-agentcore.amazonaws.com"
-      source_arn = "arn:${local.partition}:bedrock-agentcore:${local.region}:${local.account_id}:gateway/*"
+      source_arn = "arn:${local.aws_partition}:bedrock-agentcore:${local.aws_region}:${local.aws_account_id}:gateway/*"
     }
   }
 
