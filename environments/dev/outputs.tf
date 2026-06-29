@@ -1,0 +1,24 @@
+output "gateway_id" {
+  description = "AgentCore Gateway ID."
+  value       = module.agentcore_gateway.gateway_id
+}
+
+output "gateway_arn" {
+  description = "AgentCore Gateway ARN."
+  value       = module.agentcore_gateway.gateway_arn
+}
+
+output "gateway_url" {
+  description = "MCP endpoint URL for the gateway."
+  value       = module.agentcore_gateway.gateway_url
+}
+
+output "interceptor_lambda_arn" {
+  description = "Echo interceptor Lambda ARN."
+  value       = module.agentcore_gateway.interceptor_lambda_arn
+}
+
+output "interceptor_log_group_name" {
+  description = "CloudWatch log group for the interceptor Lambda."
+  value       = module.agentcore_gateway.interceptor_log_group_name
+}

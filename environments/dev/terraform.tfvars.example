@@ -1,0 +1,14 @@
+region = "us-east-1"
+name   = "agentcore-dev"
+
+# Default inbound auth is AWS_IAM. To use JWT instead, uncomment:
+# authorizer_type = "CUSTOM_JWT"
+# jwt_authorizer = {
+#   discovery_url    = "https://YOUR_IDP/.well-known/openid-configuration"
+#   allowed_audience = ["your-audience"]
+#   allowed_clients  = ["your-client-id"]
+# }
+
+tags = {
+  Owner = "platform-team"
+}
