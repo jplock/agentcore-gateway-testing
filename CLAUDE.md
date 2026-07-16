@@ -16,7 +16,9 @@ terraform plan
 terraform apply    # needs a recent AWS CLI v2 (inference targets are created via local-exec)
 ```
 
-`validate` and `plan` are the default verification. Never run `terraform apply`, `terraform destroy`, or `scripts/inference-target.sh` unless explicitly asked — they create and delete real AWS resources, and dev state is local (no remote backend to recover from).
+A Makefile wraps these from the repo root: `make plan` / `make validate` / `make fmt` / `make shellcheck` (`ENV=dev` default).
+
+`validate` and `plan` are the default verification. Never run `terraform apply`, `terraform destroy`, or `scripts/inference-target.sh` unless explicitly asked — they create and delete real AWS resources.
 
 After an apply, watch gateway traffic echoed by the interceptor:
 
@@ -28,17 +30,18 @@ aws logs tail "$(terraform output -raw interceptor_log_group_name)" --follow
 
 Two-layer Terraform layout:
 
-- `modules/agentcore-gateway/` — opinionated module provisioning an Amazon Bedrock AgentCore Gateway (MCP protocol) that is privately reachable from a VPC, serves model inference at `/inference`, and echoes traffic through a Python interceptor Lambda. Everything useful is hardcoded on (semantic search, response streaming, DEBUG exception level, REQUEST+RESPONSE interception, both inference targets); only identity, auth, network placement, KMS, and tags are inputs.
-- `environments/dev/` — dev root config: creates a minimal VPC (`terraform-aws-modules/vpc/aws`, private subnets only, no NAT/IGW) and instantiates the module. Uses local state by default; a remote backend stub is commented out in `versions.tf`.
+- `modules/agentcore-gateway/` — opinionated module provisioning an Amazon Bedrock AgentCore Gateway (MCP protocol) that is privately reachable from a VPC, serves model inference at `/inference`, and echoes traffic through a Python interceptor Lambda. Everything useful is hardcoded on (semantic search, 1-hour MCP sessions, response streaming, DEBUG exception level, REQUEST+RESPONSE interception, both inference targets); only identity, auth, network placement, AWS profile, KMS, and tags are inputs.
+- `environments/dev/` — dev root config: creates a minimal VPC (`terraform-aws-modules/vpc/aws`, private subnets only, no NAT/IGW) and instantiates the module. State lives in the S3 backend in `backend.tf`; the AWS provider profile comes from `var.aws_profile` (SSO profile by default, empty in CI for env-var credentials).
 
 Module files by concern:
 
 - `main.tf` — the `aws_bedrockagentcore_gateway` resource; only the JWT authorizer block is conditional.
 - `vpc.tf` — interface VPC endpoint (`com.amazonaws.<region>.bedrock-agentcore.gateway`) with private DNS plus its security group (HTTPS from the VPC CIDR).
+- `observability.tf` — vended log deliveries for `APPLICATION_LOGS` (CloudWatch log groups) and `TRACES` (X-Ray), covering both the gateway and its workload identity (the console's Gateway and Identity tabs). The account-level Transaction Search prerequisite lives in `environments/dev/observability.tf` (log resource policy + `aws_xray_trace_segment_destination` + 100% indexing rule); the module block in dev `depends_on` it so trace delivery doesn't race enablement.
 - `inference.tf` + `scripts/inference-target.sh` — the `bedrock-mantle` connector target and `bedrock-runtime` provider target (OpenAI-compatible chat completions), managed via the AWS CLI (see `.claude/rules/inference-targets.md`).
 - `lambda.tf` — the interceptor Lambda via `terraform-aws-modules/lambda/aws`, which packages `src/interceptor/handler.py` directly and also manages the execution role, CloudWatch log group, and the gateway→Lambda invoke permission (`allowed_triggers`).
 - `iam.tf` / `data.tf` — the gateway's service role (trust policy carries confused-deputy conditions) with two inline policies: invoke-interceptor and bedrock-inference (Bedrock runtime `bedrock:InvokeModel*` + Mantle `bedrock-mantle:CreateInference`/`Get*`/`List*`).
-- `locals.tf` — caller identity/region/partition exposed as `local.aws_account_id`, `local.aws_region`, `local.aws_partition`.
+- `locals.tf` / `data.tf` — every local and data source lives here (per-directory convention, also in `environments/dev`): caller identity/region/partition as `local.aws_account_id` etc., the inference target request payloads, IAM policy documents, and the endpoint VPC lookup.
 
 The interceptor (`modules/agentcore-gateway/src/interceptor/handler.py`) is a deliberate no-op: it logs the full event and returns it unchanged. The gateway treats the returned object as the in-flight payload, so any change to the return value mutates gateway traffic.
 

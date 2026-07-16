@@ -11,9 +11,10 @@ defaults, and only identity, auth, and network placement are configurable.
 
 | Resource | Purpose |
 | --- | --- |
-| `aws_bedrockagentcore_gateway` | MCP gateway with semantic tool search, response streaming (SSE), DEBUG exception level, and the echo interceptor wired at REQUEST/RESPONSE. |
+| `aws_bedrockagentcore_gateway` | MCP gateway with semantic tool search, stateful MCP sessions (1-hour absolute timeout), response streaming (SSE), DEBUG exception level, and the echo interceptor wired at REQUEST/RESPONSE. |
 | `aws_vpc_endpoint` + security group | Interface endpoint (`com.amazonaws.<region>.bedrock-agentcore.gateway`) with private DNS so the gateway data plane is reachable privately from your VPC. |
 | `terraform_data.inference_target` (×2) | Inference targets served at the gateway's `/inference` path: the `bedrock-mantle` connector and a `bedrock-runtime` provider target (OpenAI-compatible chat completions, all models). |
+| CloudWatch log deliveries | Vended log delivery of `APPLICATION_LOGS` to CloudWatch log groups (14-day retention) and `TRACES` to X-Ray, for both the gateway and its workload identity. Traces require account-level CloudWatch Transaction Search, enabled by the consuming configuration. |
 | `module.interceptor_lambda` (`terraform-aws-modules/lambda/aws`) | Python echo interceptor (python3.13, 128 MB, 30 s timeout, 14-day logs) including its execution role, log group, and gateway invoke permission. |
 | `aws_iam_role` (gateway) | Service role assumed by the gateway, allowed to invoke the interceptor and to run Bedrock runtime / Bedrock Mantle inference. |
 
@@ -82,6 +83,9 @@ to the policies of the principals allowed to invoke the gateway.
 
 - MCP tool targets (`aws_bedrockagentcore_gateway_target` — Lambda, OpenAPI,
   MCP server) are intentionally out of scope — add them in the consuming
-  configuration once you know which tools the gateway should expose.
+  configuration once you know which tools the gateway should expose. Because
+  sessions are enabled, targets must not list `Mcp-Session-Id` in their
+  `metadata_configuration` header propagation — the gateway manages session IDs
+  and rejects such targets with a 400.
 
 <!-- Inputs/Outputs: see variables.tf and outputs.tf -->

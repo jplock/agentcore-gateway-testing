@@ -34,6 +34,15 @@ Tail the interceptor logs to watch requests/responses echoed by the gateway:
 aws logs tail "$(terraform output -raw interceptor_log_group_name)" --follow
 ```
 
+The gateway's own application logs are delivered to a separate log group, and
+traces are delivered to X-Ray (CloudWatch Transaction Search — see the
+[GenAI observability page](https://console.aws.amazon.com/cloudwatch/home#gen-ai-observability);
+spans land in the `aws/spans` log group):
+
+```bash
+aws logs tail "$(terraform output -raw gateway_log_group_name)" --follow
+```
+
 Test model inference from a host inside the VPC (traffic resolves to the VPC
 endpoint via private DNS). With `AWS_IAM` auth, sign requests with SigV4, e.g.
 using [awscurl](https://github.com/okigan/awscurl):
@@ -50,6 +59,5 @@ inference target.
 
 > **Note:** the gateway's public endpoint also remains reachable; the VPC
 > endpoint adds private access, and IAM conditions (e.g. `aws:SourceVpce`) are
-> needed to enforce VPC-only access. Configure a remote backend (see
-> `versions.tf`) before using this in a shared/team setting — the default uses
-> local state.
+> needed to enforce VPC-only access. State lives in the S3 backend configured
+> in `backend.tf` — point it at your own bucket before `terraform init`.

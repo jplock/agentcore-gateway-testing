@@ -1,6 +1,9 @@
 region = "us-east-1"
 name   = "agentcore-dev"
 
+# AWS CLI/SSO profile (default: dev-admin). Set to "" to use env-var credentials.
+# aws_profile = "dev-admin"
+
 # Default inbound auth is AWS_IAM. To use JWT instead, uncomment:
 # authorizer_type = "CUSTOM_JWT"
 # jwt_authorizer = {

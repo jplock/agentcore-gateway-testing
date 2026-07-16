@@ -2,6 +2,10 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
+data "aws_vpc" "gateway_endpoint" {
+  id = var.vpc_id
+}
+
 data "aws_iam_policy_document" "gateway_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]

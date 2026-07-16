@@ -33,7 +33,7 @@ See the [dev environment README](environments/dev/README.md) for testing the gat
 ## Notes
 
 - The gateway's public endpoint cannot be disabled; the VPC endpoint adds private access, and IAM conditions (e.g. `aws:SourceVpce`) are needed to enforce VPC-only access.
-- The dev environment uses local Terraform state — configure a remote backend before sharing it.
+- Dev state lives in the S3 backend configured in `environments/dev/backend.tf` — point it at your own bucket before `terraform init`.
 
 ## License
 

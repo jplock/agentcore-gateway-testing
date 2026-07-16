@@ -62,6 +62,12 @@ variable "subnet_ids" {
   }
 }
 
+variable "aws_profile" {
+  description = "AWS CLI/SSO profile exported as AWS_PROFILE to the local-exec script that manages inference targets, so it authenticates like the provider. Empty uses ambient env-var credentials (e.g. CI)."
+  type        = string
+  default     = ""
+}
+
 variable "kms_key_arn" {
   description = "Optional KMS key ARN used to encrypt the gateway. Uses an AWS managed key when null."
   type        = string

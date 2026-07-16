@@ -10,6 +10,12 @@ variable "name" {
   default     = "agentcore-dev"
 }
 
+variable "tags" {
+  description = "Additional tags merged into the provider's default_tags."
+  type        = map(string)
+  default     = {}
+}
+
 variable "authorizer_type" {
   description = "Inbound authorization method for the gateway (AWS_IAM or CUSTOM_JWT)."
   type        = string
@@ -26,8 +32,8 @@ variable "jwt_authorizer" {
   default = null
 }
 
-variable "tags" {
-  description = "Additional tags applied to taggable resources."
-  type        = map(string)
-  default     = {}
+variable "aws_profile" {
+  description = "AWS shared-credentials profile name. Defaults to the local SSO profile; CI sets this to \"\" so the provider falls through to env-var credentials supplied by OIDC."
+  type        = string
+  default     = "dev-admin"
 }

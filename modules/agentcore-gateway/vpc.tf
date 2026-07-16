@@ -6,10 +6,6 @@
 # endpoint remains reachable; restrict callers with IAM conditions (e.g.
 # aws:SourceVpce) to enforce VPC-only access.
 
-data "aws_vpc" "gateway_endpoint" {
-  id = var.vpc_id
-}
-
 resource "aws_security_group" "gateway_endpoint" {
   name        = "${var.name}-gateway-endpoint"
   description = "HTTPS to the ${var.name} AgentCore Gateway VPC endpoint"

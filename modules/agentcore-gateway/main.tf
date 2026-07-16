@@ -33,6 +33,13 @@ resource "aws_bedrockagentcore_gateway" "this" {
       # Semantic tool search across targets.
       search_type = "SEMANTIC"
 
+      # Stateful MCP sessions (Mcp-Session-Id), scoped to the caller identity.
+      # The timeout is absolute, measured from the first initialize request.
+      # Sessions plus streaming enable MCP elicitation and sampling.
+      session_configuration {
+        session_timeout_in_seconds = 3600
+      }
+
       # SSE streaming, required for streamed inference responses.
       streaming_configuration {
         enable_response_streaming = true

@@ -23,6 +23,16 @@ output "gateway_vpc_endpoint_id" {
   value       = aws_vpc_endpoint.gateway.id
 }
 
+output "gateway_log_group_name" {
+  description = "CloudWatch log group receiving the gateway's application logs."
+  value       = aws_cloudwatch_log_group.gateway.name
+}
+
+output "identity_log_group_name" {
+  description = "CloudWatch log group receiving the gateway workload identity's application logs."
+  value       = aws_cloudwatch_log_group.workload_identity.name
+}
+
 output "gateway_role_arn" {
   description = "ARN of the IAM role assumed by the gateway."
   value       = aws_iam_role.gateway.arn

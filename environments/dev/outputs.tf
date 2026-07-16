@@ -28,6 +28,16 @@ output "gateway_vpc_endpoint_id" {
   value       = module.agentcore_gateway.gateway_vpc_endpoint_id
 }
 
+output "gateway_log_group_name" {
+  description = "CloudWatch log group receiving the gateway's application logs."
+  value       = module.agentcore_gateway.gateway_log_group_name
+}
+
+output "identity_log_group_name" {
+  description = "CloudWatch log group receiving the gateway workload identity's application logs."
+  value       = module.agentcore_gateway.identity_log_group_name
+}
+
 output "interceptor_lambda_arn" {
   description = "Echo interceptor Lambda ARN."
   value       = module.agentcore_gateway.interceptor_lambda_arn

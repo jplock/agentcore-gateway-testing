@@ -1,7 +1,3 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 # Minimal VPC for private access to the gateway. Private subnets only; the
 # interface VPC endpoint needs no NAT or internet gateway.
 module "vpc" {
@@ -30,8 +26,15 @@ module "agentcore_gateway" {
   authorizer_type = var.authorizer_type
   jwt_authorizer  = var.jwt_authorizer
 
+  # Same credentials for the provider and the local-exec inference-target script.
+  aws_profile = var.aws_profile
+
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
   tags = var.tags
+
+  # The module's TRACES delivery fails unless Transaction Search is enabled
+  # first (observability.tf).
+  depends_on = [aws_xray_trace_segment_destination.cloudwatch_logs]
 }
