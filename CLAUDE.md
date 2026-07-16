@@ -26,6 +26,8 @@ After an apply, watch gateway traffic echoed by the interceptor:
 aws logs tail "$(terraform output -raw interceptor_log_group_name)" --follow
 ```
 
+The gateway's own logs and its workload identity's logs land in separate groups (`gateway_log_group_name` / `identity_log_group_name` outputs); traces go to X-Ray via Transaction Search (`aws/spans` log group).
+
 ## Architecture
 
 Two-layer Terraform layout:
@@ -40,14 +42,14 @@ Module files by concern:
 - `observability.tf` — vended log deliveries for `APPLICATION_LOGS` (CloudWatch log groups) and `TRACES` (X-Ray), covering both the gateway and its workload identity (the console's Gateway and Identity tabs). The account-level Transaction Search prerequisite lives in `environments/dev/observability.tf` (log resource policy + `aws_xray_trace_segment_destination` + 100% indexing rule); the module block in dev `depends_on` it so trace delivery doesn't race enablement.
 - `inference.tf` + `scripts/inference-target.sh` — the `bedrock-mantle` connector target and `bedrock-runtime` provider target (OpenAI-compatible chat completions), managed via the AWS CLI (see `.claude/rules/inference-targets.md`).
 - `lambda.tf` — the interceptor Lambda via `terraform-aws-modules/lambda/aws`, which packages `src/interceptor/handler.py` directly and also manages the execution role, CloudWatch log group, and the gateway→Lambda invoke permission (`allowed_triggers`).
-- `iam.tf` / `data.tf` — the gateway's service role (trust policy carries confused-deputy conditions) with two inline policies: invoke-interceptor and bedrock-inference (Bedrock runtime `bedrock:InvokeModel*` + Mantle `bedrock-mantle:CreateInference`/`Get*`/`List*`).
+- `iam.tf` — the gateway's service role with two inline policies: invoke-interceptor and bedrock-inference (Bedrock runtime `bedrock:InvokeModel*` + Mantle `bedrock-mantle:CreateInference`/`Get*`/`List*`); its trust policy (in `data.tf`) carries confused-deputy conditions.
 - `locals.tf` / `data.tf` — every local and data source lives here (per-directory convention, also in `environments/dev`): caller identity/region/partition as `local.aws_account_id` etc., the inference target request payloads, IAM policy documents, and the endpoint VPC lookup.
 
 The interceptor (`modules/agentcore-gateway/src/interceptor/handler.py`) is a deliberate no-op: it logs the full event and returns it unchanged. The gateway treats the returned object as the in-flight payload, so any change to the return value mutates gateway traffic.
 
 ## Constraints
 
-- AWS provider `>= 6.55.0`; Terraform `>= 1.5.0`; lambda module `>= 7.0.0`.
+- AWS provider `>= 6.55.0`; lambda module `>= 7.0.0`. Terraform `>= 1.10.0` in `environments/dev` (the S3 backend's `use_lockfile` needs it); the module itself only needs `>= 1.5.0`.
 - Applies require a recent AWS CLI v2 with credentials for the target account — inference targets are created through `aws bedrock-agentcore-control`, outside Terraform's providers.
 - PrivateLink adds private access but the gateway's public endpoint cannot be disabled; enforcing VPC-only access requires IAM conditions (e.g. `aws:SourceVpce`) on callers.
 - Default inbound auth is `AWS_IAM`; `CUSTOM_JWT` requires `jwt_authorizer` (enforced by variable validation in `modules/agentcore-gateway/variables.tf`).
