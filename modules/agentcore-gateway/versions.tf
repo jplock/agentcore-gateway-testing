@@ -4,8 +4,9 @@ terraform {
   required_providers {
     aws = {
       source = "hashicorp/aws"
-      # AgentCore Gateway interceptor support landed in 6.22.0.
-      version = ">= 6.22.0"
+      # Gateway streaming/session configuration, exception level, and JWT
+      # allowed_scopes landed by 6.55.0 (interceptors landed in 6.22.0).
+      version = ">= 6.55.0"
     }
   }
 }

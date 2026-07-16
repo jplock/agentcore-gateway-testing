@@ -13,6 +13,16 @@ output "gateway_url" {
   value       = aws_bedrockagentcore_gateway.this.gateway_url
 }
 
+output "gateway_inference_url" {
+  description = "OpenAI/Anthropic-compatible inference endpoint served by the gateway."
+  value       = "https://${aws_bedrockagentcore_gateway.this.gateway_id}.gateway.bedrock-agentcore.${local.aws_region}.amazonaws.com/inference"
+}
+
+output "gateway_vpc_endpoint_id" {
+  description = "Interface VPC endpoint providing private access to the gateway."
+  value       = aws_vpc_endpoint.gateway.id
+}
+
 output "gateway_role_arn" {
   description = "ARN of the IAM role assumed by the gateway."
   value       = aws_iam_role.gateway.arn

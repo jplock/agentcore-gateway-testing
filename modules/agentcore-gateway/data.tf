@@ -22,3 +22,31 @@ data "aws_iam_policy_document" "gateway_assume_role" {
     }
   }
 }
+
+data "aws_iam_policy_document" "gateway_inference" {
+  # Mirrors the AmazonBedrockMantleInferenceAccess managed policy, scoped to
+  # this account's Mantle projects.
+  statement {
+    sid = "BedrockMantleInference"
+    actions = [
+      "bedrock-mantle:CreateInference",
+      "bedrock-mantle:Get*",
+      "bedrock-mantle:List*",
+    ]
+    resources = ["arn:${local.aws_partition}:bedrock-mantle:${local.aws_region}:${local.aws_account_id}:project/*"]
+  }
+
+  statement {
+    sid = "BedrockRuntimeInference"
+    actions = [
+      "bedrock:InvokeModel",
+      "bedrock:InvokeModelWithResponseStream",
+    ]
+    # Region wildcard: cross-region inference profiles fan out to models in
+    # other regions.
+    resources = [
+      "arn:${local.aws_partition}:bedrock:*::foundation-model/*",
+      "arn:${local.aws_partition}:bedrock:*:${local.aws_account_id}:inference-profile/*",
+    ]
+  }
+}

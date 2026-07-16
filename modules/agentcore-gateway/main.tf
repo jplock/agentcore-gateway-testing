@@ -10,6 +10,9 @@ resource "aws_bedrockagentcore_gateway" "this" {
   protocol_type   = "MCP"
   authorizer_type = var.authorizer_type
 
+  # Verbose error details in gateway responses.
+  exception_level = "DEBUG"
+
   kms_key_arn = var.kms_key_arn
 
   # Inbound JWT authorization (only when CUSTOM_JWT is selected).
@@ -20,24 +23,26 @@ resource "aws_bedrockagentcore_gateway" "this" {
         discovery_url    = authorizer_configuration.value.discovery_url
         allowed_audience = authorizer_configuration.value.allowed_audience
         allowed_clients  = authorizer_configuration.value.allowed_clients
+        allowed_scopes   = authorizer_configuration.value.allowed_scopes
       }
     }
   }
 
-  # MCP protocol options (only emitted when something is configured).
-  dynamic "protocol_configuration" {
-    for_each = (var.mcp_instructions != null || var.mcp_supported_versions != null) ? [1] : []
-    content {
-      mcp {
-        instructions       = var.mcp_instructions
-        supported_versions = var.mcp_supported_versions
+  protocol_configuration {
+    mcp {
+      # Semantic tool search across targets.
+      search_type = "SEMANTIC"
+
+      # SSE streaming, required for streamed inference responses.
+      streaming_configuration {
+        enable_response_streaming = true
       }
     }
   }
 
-  # Echo interceptor wired in at the configured interception points.
+  # Echo interceptor on both directions, including request headers.
   interceptor_configuration {
-    interception_points = var.interception_points
+    interception_points = ["REQUEST", "RESPONSE"]
 
     interceptor {
       lambda {
@@ -46,7 +51,7 @@ resource "aws_bedrockagentcore_gateway" "this" {
     }
 
     input_configuration {
-      pass_request_headers = var.pass_request_headers
+      pass_request_headers = true
     }
   }
 

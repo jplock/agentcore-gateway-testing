@@ -6,21 +6,21 @@ module "interceptor_lambda" {
   description   = "Echo interceptor for the ${var.name} AgentCore Gateway"
 
   handler     = "handler.handler"
-  runtime     = var.lambda_runtime
-  timeout     = var.lambda_timeout
-  memory_size = var.lambda_memory_size
+  runtime     = "python3.13"
+  timeout     = 30
+  memory_size = 128
 
   # Let the module package the Python source directly.
   source_path = "${path.module}/src/interceptor"
 
   environment_variables = {
-    LOG_LEVEL = var.lambda_log_level
+    LOG_LEVEL = "INFO"
   }
 
   # IAM execution role + CloudWatch Logs are managed by the module.
   create_role                       = true
   attach_cloudwatch_logs_policy     = true
-  cloudwatch_logs_retention_in_days = var.log_retention_in_days
+  cloudwatch_logs_retention_in_days = 14
 
   # Allow the AgentCore Gateway service to invoke the interceptor.
   allowed_triggers = {

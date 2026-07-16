@@ -26,3 +26,10 @@ resource "aws_iam_role_policy" "gateway_invoke_interceptor" {
     ]
   })
 }
+
+# Allow the gateway to run model inference through its inference targets.
+resource "aws_iam_role_policy" "gateway_inference" {
+  name   = "bedrock-inference"
+  role   = aws_iam_role.gateway.id
+  policy = data.aws_iam_policy_document.gateway_inference.json
+}
