@@ -7,6 +7,11 @@
 # require account-level CloudWatch Transaction Search, which is enabled by the
 # consuming configuration (see environments/dev/observability.tf); spans land
 # in the aws/spans log group.
+#
+# Each delivery carries replace_triggered_by on its source's resource_arn:
+# replacing the gateway replaces the sources, and AWS refuses to delete a
+# delivery source while a delivery still references it, so the delivery must
+# be replaced (destroyed first) alongside its source.
 
 resource "aws_cloudwatch_log_group" "gateway" {
   name              = "/aws/vendedlogs/bedrock-agentcore/gateway/APPLICATION_LOGS/${var.name}"
@@ -35,6 +40,10 @@ resource "aws_cloudwatch_log_delivery" "gateway_logs" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.gateway_logs.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.gateway_logs.arn
   tags                     = var.tags
+
+  lifecycle {
+    replace_triggered_by = [aws_cloudwatch_log_delivery_source.gateway_logs.resource_arn]
+  }
 }
 
 resource "aws_cloudwatch_log_delivery_source" "gateway_traces" {
@@ -54,6 +63,10 @@ resource "aws_cloudwatch_log_delivery" "gateway_traces" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.gateway_traces.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.gateway_traces.arn
   tags                     = var.tags
+
+  lifecycle {
+    replace_triggered_by = [aws_cloudwatch_log_delivery_source.gateway_traces.resource_arn]
+  }
 }
 
 ############################################
@@ -90,6 +103,10 @@ resource "aws_cloudwatch_log_delivery" "identity_logs" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.identity_logs.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.identity_logs.arn
   tags                     = var.tags
+
+  lifecycle {
+    replace_triggered_by = [aws_cloudwatch_log_delivery_source.identity_logs.resource_arn]
+  }
 }
 
 resource "aws_cloudwatch_log_delivery_source" "identity_traces" {
@@ -103,4 +120,8 @@ resource "aws_cloudwatch_log_delivery" "identity_traces" {
   delivery_source_name     = aws_cloudwatch_log_delivery_source.identity_traces.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.gateway_traces.arn
   tags                     = var.tags
+
+  lifecycle {
+    replace_triggered_by = [aws_cloudwatch_log_delivery_source.identity_traces.resource_arn]
+  }
 }

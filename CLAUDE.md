@@ -45,7 +45,7 @@ Module files by concern:
 - `iam.tf` — the gateway's service role with two inline policies: invoke-interceptor and bedrock-inference (Bedrock runtime `bedrock:InvokeModel*` + Mantle `bedrock-mantle:CreateInference`/`Get*`/`List*`); its trust policy (in `data.tf`) carries confused-deputy conditions.
 - `locals.tf` / `data.tf` — every local and data source lives here (per-directory convention, also in `environments/dev`): caller identity/region/partition as `local.aws_account_id` etc., the inference target request payloads, IAM policy documents, and the endpoint VPC lookup.
 
-The interceptor (`modules/agentcore-gateway/src/interceptor/handler.py`) is a deliberate no-op: it logs the full event and returns it unchanged. The gateway treats the returned object as the in-flight payload, so any change to the return value mutates gateway traffic.
+The interceptor (`modules/agentcore-gateway/src/interceptor/handler.py`) is a deliberate pass-through: it logs the full event, then returns the documented no-op output — `{"interceptorOutputVersion": "1.0", ...}` with `transformedGatewayRequest`/`transformedGatewayResponse` per the MCP and HTTP contracts in the devguide's "Types of interceptors". Echoing the raw event back is rejected by the gateway ("Received invalid response from interceptor"), and returning a `transformedGatewayResponse` from the REQUEST point short-circuits the target call.
 
 ## Constraints
 
@@ -54,4 +54,5 @@ The interceptor (`modules/agentcore-gateway/src/interceptor/handler.py`) is a de
 - PrivateLink adds private access but the gateway's public endpoint cannot be disabled; enforcing VPC-only access requires IAM conditions (e.g. `aws:SourceVpce`) on callers.
 - Default inbound auth is `AWS_IAM`; `CUSTOM_JWT` requires `jwt_authorizer` (enforced by variable validation in `modules/agentcore-gateway/variables.tf`).
 - MCP tool targets (`aws_bedrockagentcore_gateway_target`) are intentionally out of scope for the module — add them in the consuming configuration.
-- Inference routing: clients pin a provider by prefixing the model with the target name (`bedrock-mantle/...` or `bedrock-runtime/...`); unqualified model IDs are matched across targets.
+- Inference routing: clients pin a provider by prefixing the model with the target name (`bedrock-mantle/...` or `bedrock-runtime/...`); unqualified model IDs are matched across targets. The gateway rejects model IDs containing `:` ("Model ID contains invalid characters"), so versioned Bedrock IDs (`...-v1:0`) cannot be used — send colon-free forms.
+- Known AWS-side gap: the `bedrock-runtime` target creates but cannot be invoked — the gateway signs with a SigV4 service Bedrock rejects, and inference targets on MCP gateways reject every alternative credential type (`iamCredentialProvider`, `API_KEY`, passthrough). The documented provider-target pattern uses the Bedrock Mantle endpoint (`bedrock-mantle.<region>.api.aws`) instead — see the devguide "Inference provider targets" page before changing target auth.

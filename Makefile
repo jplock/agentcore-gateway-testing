@@ -6,7 +6,7 @@
 #   make fmt                        # terraform fmt -recursive on the whole tree
 #   make validate                   # terraform validate against $ENV
 #   make tflint                     # tflint the module + envs
-#   make shellcheck                 # lint the inference-target script
+#   make shellcheck                 # lint the shell scripts
 #
 # plan/apply/destroy assume AWS credentials are already in the environment
 # (e.g., from `aws sso login`). apply also needs a recent AWS CLI v2: the
@@ -22,7 +22,7 @@ ENV_DIR := environments/$(ENV)
 TF     ?= terraform
 TFLINT ?= tflint
 
-SCRIPTS := modules/agentcore-gateway/scripts/inference-target.sh
+SCRIPTS := modules/agentcore-gateway/scripts/inference-target.sh scripts/test-inference.sh
 
 .PHONY: help init plan apply destroy fmt fmt-check validate tflint shellcheck
 
@@ -53,6 +53,6 @@ validate:                        ## terraform validate the current ENV.
 tflint:                          ## tflint modules and envs.
 	$(TFLINT) --recursive
 
-shellcheck:                      ## Lint and format-check the inference-target script.
+shellcheck:                      ## Lint and format-check the shell scripts.
 	shellcheck $(SCRIPTS)
 	shfmt -i 2 -d $(SCRIPTS)
